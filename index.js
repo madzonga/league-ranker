@@ -2,15 +2,13 @@
 // Importing the Required Modules 
 const fs = require('fs'); 
 
-
 if (process.argv.length < 3) {
     console.log('Usage: node ' + process.argv[1] + ' FILENAME');
     process.exit(1);
 }
-var filename = process.argv[2];
 
 // ------- read lines into array --------
-function getReadLinesIntoArray() {
+function getReadLinesIntoArray(filename) {
     const data = fs.readFileSync(filename, 'UTF-8');
     const lines = data.split(/\r?\n/);
     
@@ -20,15 +18,16 @@ function getReadLinesIntoArray() {
         if (line.length > 0)
             teamAndNumberOfGoals.push(line.split(',').map(item => item.trim()));
     });
-    
     return teamAndNumberOfGoals;
 }
 
 // ------- get team names -------
 function getTeamNamesAndPoints() {
-    var teamNames = []
-    var teamNamesAndPoints = []
-    var teamAndNumberOfGoals = getReadLinesIntoArray();
+    var teamNames = [];
+    var teamNamesAndPoints = [];
+    var filename = process.argv[2];
+
+    var teamAndNumberOfGoals = getReadLinesIntoArray(filename);
     for (var i = 0; i < teamAndNumberOfGoals.length; i ++) {
         var team1 = teamAndNumberOfGoals[i][0].split(" ");
         var team2 = teamAndNumberOfGoals[i][1].split(" ");
@@ -71,14 +70,13 @@ function getTeamNamesAndPoints() {
             teamNamesAndPoints[teamNames.indexOf(team2Name)][1] += 3;
         }
     }
-
-    teamNamesAndPoints = sortTeamsAndPointsArray(teamNamesAndPoints);
     return teamNamesAndPoints;
 }
 
 
 // ------- sort the team and points array ------- 
-function sortTeamsAndPointsArray(teamNamesAndPoints) {
+function getSortedTeamsAndPointsArray() {
+    teamNamesAndPoints = getTeamNamesAndPoints();
     teamNamesAndPoints.sort(sortFunction);
     return teamNamesAndPoints;
 }
@@ -94,7 +92,7 @@ function sortFunction(a, b) {
 
 // ------- compute the rankings ---------
 function computeTeamRankings() {
-    teamNamesAndPoints = getTeamNamesAndPoints();
+    teamNamesAndPoints = getSortedTeamsAndPointsArray();
     var ranking = 1;
     var rankingArray = [];
     var tieCounter = 0;
@@ -103,9 +101,9 @@ function computeTeamRankings() {
             tieCounter ++;
             rankingArray.push(ranking);
         } else if (teamNamesAndPoints[i - 1][1] > teamNamesAndPoints[i][1]) {
-            tieCounter = 0;
             rankingArray.push(ranking);
             ranking = ranking + tieCounter;
+            tieCounter = 0;
             ranking ++;
         } 
         if (i == (teamNamesAndPoints.length - 1)) {
@@ -116,17 +114,20 @@ function computeTeamRankings() {
 }
 
 // format the output
-function formatTheRankings() {
+function displayRankingTable() {
     rankingArray = computeTeamRankings();
+    var rankingTableToDisplay = '';
     for (var i = 0; i < rankingArray.length; i ++) {
-        console.log(rankingArray[i] + ". " + teamNamesAndPoints[i][0] + ", " + teamNamesAndPoints[i][1]);
+        rankingTableToDisplay = rankingTableToDisplay + rankingArray[i] + ". " + teamNamesAndPoints[i][0] + ", " + teamNamesAndPoints[i][1] + '\n';
     }
+    return rankingTableToDisplay;
 }
 
-formatTheRankings();
+displayRankingTable();
+console.log(displayRankingTable());
 
 exports.getReadLinesIntoArray = getReadLinesIntoArray;
 exports.getTeamNamesAndPoints = getTeamNamesAndPoints;
-exports.sortTeamsAndPointsArray = sortTeamsAndPointsArray;
+exports.getSortedTeamsAndPointsArray = getSortedTeamsAndPointsArray;
 exports.computeTeamRankings = computeTeamRankings;
-exports.formatTheRankings = formatTheRankings;
+exports.displayRankingTable = displayRankingTable;
